@@ -1,0 +1,533 @@
+{% extends "bootstrap/base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+{% endblock %}
+
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('static', filename='css/styles.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='plugins/font-awesome/css/font-awesome.css')}}">
+<style>
+    .edit-container {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #fff;
+    }
+    .form-section {
+        margin-bottom: 40px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .form-section h2 {
+        color: #42A8C0;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #42A8C0;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    textarea.form-control {
+        min-height: 100px;
+    }
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+    }
+    .btn-primary {
+        background-color: #42A8C0;
+        color: white;
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    .btn-add {
+        background-color: #28a745;
+        color: white;
+        margin-top: 10px;
+    }
+    .btn-remove {
+        background-color: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    .dynamic-item {
+        margin-bottom: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        position: relative;
+    }
+    .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .navbar-custom {
+        background-color: #42A8C0;
+        padding: 15px;
+        color: white;
+        margin-bottom: 30px;
+    }
+    .navbar-custom h1 {
+        margin: 0;
+        color: white;
+    }
+    .action-buttons {
+        margin: 30px 0;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+    Edit Resume
+{% endblock %}
+
+{% block body %}
+<div class="navbar-custom">
+    <div class="edit-container">
+        <h1><i class="fa fa-edit"></i> Edit Your Resume</h1>
+    </div>
+</div>
+
+<div class="edit-container">
+    <form method="POST" action="{{ url_for('main.update') }}">
+        
+        <!-- Basic Information Section -->
+        <div class="form-section">
+            <h2><i class="fa fa-user"></i> Basic Information</h2>
+            
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ config.data.name }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="tagline">Tagline / Job Title</label>
+                <input type="text" class="form-control" id="tagline" name="tagline" value="{{ config.data.tagline }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ config.data.email }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="text" class="form-control" id="phone" name="phone" value="{{ config.data.phone }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="website">Website</label>
+                <input type="text" class="form-control" id="website" name="website" value="{{ config.data.website }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="linkedin">LinkedIn</label>
+                <input type="text" class="form-control" id="linkedin" name="linkedin" value="{{ config.data.linkedin }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="github">GitHub</label>
+                <input type="text" class="form-control" id="github" name="github" value="{{ config.data.github }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="twitter">Twitter</label>
+                <input type="text" class="form-control" id="twitter" name="twitter" value="{{ config.data.twitter }}">
+            </div>
+        </div>
+
+        <!-- Career Summary Section -->
+        <div class="form-section">
+            <h2><i class="fa fa-file-text"></i> Career Summary</h2>
+            <div class="form-group">
+                <label for="summary">Summary (HTML allowed)</label>
+                <textarea class="form-control" id="summary" name="summary">{{ config.data.summary|safe }}</textarea>
+            </div>
+        </div>
+
+        <!-- Skills Section -->
+        <div class="form-section">
+            <h2><i class="fa fa-rocket"></i> Skills & Proficiency</h2>
+            <div id="skills-container">
+                {% for skill in config.data.skills %}
+                <div class="dynamic-item">
+                    <div class="item-header">
+                        <strong>Skill {{ loop.index }}</strong>
+                        <button type="button" class="btn btn-remove" onclick="removeSkill(this)">Remove</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Skill Name</label>
+                        <input type="text" class="form-control" name="skill_name_{{ loop.index0 }}" value="{{ skill[0] }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Level (e.g., 95%)</label>
+                        <input type="text" class="form-control" name="skill_level_{{ loop.index0 }}" value="{{ skill[1] }}">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="skill_count" name="skill_count" value="{{ config.data.skills|length }}">
+            <button type="button" class="btn btn-add" onclick="addSkill()">Add Skill</button>
+        </div>
+
+        <!-- Languages Section -->
+        <div class="form-section">
+            <h2><i class="fa fa-language"></i> Languages</h2>
+            <div id="languages-container">
+                {% for lang in config.data.languages %}
+                <div class="dynamic-item">
+                    <div class="item-header">
+                        <strong>Language {{ loop.index }}</strong>
+                        <button type="button" class="btn btn-remove" onclick="removeLanguage(this)">Remove</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Language</label>
+                        <input type="text" class="form-control" name="lang_name_{{ loop.index0 }}" value="{{ lang[0] }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Proficiency (e.g., Native, Professional)</label>
+                        <input type="text" class="form-control" name="lang_level_{{ loop.index0 }}" value="{{ lang[1] }}">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="lang_count" name="lang_count" value="{{ config.data.languages|length }}">
+            <button type="button" class="btn btn-add" onclick="addLanguage()">Add Language</button>
+        </div>
+
+        <!-- Education Section -->
+        <div class="form-section">
+            <h2><i class="fa fa-graduation-cap"></i> Education</h2>
+            <div id="education-container">
+                {% for edu in config.data.education %}
+                <div class="dynamic-item">
+                    <div class="item-header">
+                        <strong>Education {{ loop.index }}</strong>
+                        <button type="button" class="btn btn-remove" onclick="removeEducation(this)">Remove</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Degree</label>
+                        <input type="text" class="form-control" name="degree_{{ loop.index0 }}" value="{{ edu[0] }}">
+                    </div>
+                    <div class="form-group">
+                        <label>School/University</label>
+                        <input type="text" class="form-control" name="school_{{ loop.index0 }}" value="{{ edu[1] }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Period</label>
+                        <input type="text" class="form-control" name="edu_time_{{ loop.index0 }}" value="{{ edu[2] }}">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="edu_count" name="edu_count" value="{{ config.data.education|length }}">
+            <button type="button" class="btn btn-add" onclick="addEducation()">Add Education</button>
+        </div>
+
+        <!-- Interests Section -->
+        <div class="form-section">
+            <h2><i class="fa fa-heart"></i> Interests</h2>
+            <div id="interests-container">
+                {% for interest in config.data.interests %}
+                <div class="dynamic-item">
+                    <div class="item-header">
+                        <strong>Interest {{ loop.index }}</strong>
+                        <button type="button" class="btn btn-remove" onclick="removeInterest(this)">Remove</button>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="interest_{{ loop.index0 }}" value="{{ interest }}">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="interest_count" name="interest_count" value="{{ config.data.interests|length }}">
+            <button type="button" class="btn btn-add" onclick="addInterest()">Add Interest</button>
+        </div>
+
+        <!-- Experience Section -->
+        <div class="form-section">
+            <h2><i class="fa fa-briefcase"></i> Work Experience</h2>
+            <div id="experience-container">
+                {% for exp in config.data.experience %}
+                <div class="dynamic-item">
+                    <div class="item-header">
+                        <strong>Position {{ loop.index }}</strong>
+                        <button type="button" class="btn btn-remove" onclick="removeExperience(this)">Remove</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Job Title</label>
+                        <input type="text" class="form-control" name="exp_title_{{ loop.index0 }}" value="{{ exp[0] }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Date Range</label>
+                        <input type="text" class="form-control" name="exp_date_{{ loop.index0 }}" value="{{ exp[1] }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Company Name & Location</label>
+                        <input type="text" class="form-control" name="exp_company_{{ loop.index0 }}" value="{{ exp[2] }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Description (HTML allowed)</label>
+                        <textarea class="form-control" name="exp_desc_{{ loop.index0 }}">{{ exp[3]|safe }}</textarea>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="exp_count" name="exp_count" value="{{ config.data.experience|length }}">
+            <button type="button" class="btn btn-add" onclick="addExperience()">Add Experience</button>
+        </div>
+
+        <!-- Projects Section -->
+        <div class="form-section">
+            <h2><i class="fa fa-archive"></i> Projects</h2>
+            
+            <div class="form-group">
+                <label for="project_intro">Projects Introduction (HTML allowed)</label>
+                <textarea class="form-control" id="project_intro" name="project_intro">{{ config.data.project_intro|safe }}</textarea>
+            </div>
+            
+            <div id="projects-container">
+                {% for proj in config.data.projects %}
+                <div class="dynamic-item">
+                    <div class="item-header">
+                        <strong>Project {{ loop.index }}</strong>
+                        <button type="button" class="btn btn-remove" onclick="removeProject(this)">Remove</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Project Name</label>
+                        <input type="text" class="form-control" name="proj_name_{{ loop.index0 }}" value="{{ proj[0] }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-control" name="proj_desc_{{ loop.index0 }}">{{ proj[1] }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Link</label>
+                        <input type="text" class="form-control" name="proj_link_{{ loop.index0 }}" value="{{ proj[2] }}">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="proj_count" name="proj_count" value="{{ config.data.projects|length }}">
+            <button type="button" class="btn btn-add" onclick="addProject()">Add Project</button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save Changes</button>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary"><i class="fa fa-times"></i> Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Skills functions
+    function addSkill() {
+        const container = document.getElementById('skills-container');
+        const count = parseInt(document.getElementById('skill_count').value);
+        const newItem = `
+            <div class="dynamic-item">
+                <div class="item-header">
+                    <strong>Skill ${count + 1}</strong>
+                    <button type="button" class="btn btn-remove" onclick="removeSkill(this)">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Skill Name</label>
+                    <input type="text" class="form-control" name="skill_name_${count}" value="">
+                </div>
+                <div class="form-group">
+                    <label>Level (e.g., 95%)</label>
+                    <input type="text" class="form-control" name="skill_level_${count}" value="">
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', newItem);
+        document.getElementById('skill_count').value = count + 1;
+    }
+
+    function removeSkill(button) {
+        button.closest('.dynamic-item').remove();
+    }
+
+    // Languages functions
+    function addLanguage() {
+        const container = document.getElementById('languages-container');
+        const count = parseInt(document.getElementById('lang_count').value);
+        const newItem = `
+            <div class="dynamic-item">
+                <div class="item-header">
+                    <strong>Language ${count + 1}</strong>
+                    <button type="button" class="btn btn-remove" onclick="removeLanguage(this)">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Language</label>
+                    <input type="text" class="form-control" name="lang_name_${count}" value="">
+                </div>
+                <div class="form-group">
+                    <label>Proficiency</label>
+                    <input type="text" class="form-control" name="lang_level_${count}" value="">
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', newItem);
+        document.getElementById('lang_count').value = count + 1;
+    }
+
+    function removeLanguage(button) {
+        button.closest('.dynamic-item').remove();
+    }
+
+    // Education functions
+    function addEducation() {
+        const container = document.getElementById('education-container');
+        const count = parseInt(document.getElementById('edu_count').value);
+        const newItem = `
+            <div class="dynamic-item">
+                <div class="item-header">
+                    <strong>Education ${count + 1}</strong>
+                    <button type="button" class="btn btn-remove" onclick="removeEducation(this)">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Degree</label>
+                    <input type="text" class="form-control" name="degree_${count}" value="">
+                </div>
+                <div class="form-group">
+                    <label>School/University</label>
+                    <input type="text" class="form-control" name="school_${count}" value="">
+                </div>
+                <div class="form-group">
+                    <label>Time Period</label>
+                    <input type="text" class="form-control" name="edu_time_${count}" value="">
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', newItem);
+        document.getElementById('edu_count').value = count + 1;
+    }
+
+    function removeEducation(button) {
+        button.closest('.dynamic-item').remove();
+    }
+
+    // Interests functions
+    function addInterest() {
+        const container = document.getElementById('interests-container');
+        const count = parseInt(document.getElementById('interest_count').value);
+        const newItem = `
+            <div class="dynamic-item">
+                <div class="item-header">
+                    <strong>Interest ${count + 1}</strong>
+                    <button type="button" class="btn btn-remove" onclick="removeInterest(this)">Remove</button>
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-control" name="interest_${count}" value="">
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', newItem);
+        document.getElementById('interest_count').value = count + 1;
+    }
+
+    function removeInterest(button) {
+        button.closest('.dynamic-item').remove();
+    }
+
+    // Experience functions
+    function addExperience() {
+        const container = document.getElementById('experience-container');
+        const count = parseInt(document.getElementById('exp_count').value);
+        const newItem = `
+            <div class="dynamic-item">
+                <div class="item-header">
+                    <strong>Position ${count + 1}</strong>
+                    <button type="button" class="btn btn-remove" onclick="removeExperience(this)">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Job Title</label>
+                    <input type="text" class="form-control" name="exp_title_${count}" value="">
+                </div>
+                <div class="form-group">
+                    <label>Date Range</label>
+                    <input type="text" class="form-control" name="exp_date_${count}" value="">
+                </div>
+                <div class="form-group">
+                    <label>Company Name & Location</label>
+                    <input type="text" class="form-control" name="exp_company_${count}" value="">
+                </div>
+                <div class="form-group">
+                    <label>Description (HTML allowed)</label>
+                    <textarea class="form-control" name="exp_desc_${count}"></textarea>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', newItem);
+        document.getElementById('exp_count').value = count + 1;
+    }
+
+    function removeExperience(button) {
+        button.closest('.dynamic-item').remove();
+    }
+
+    // Projects functions
+    function addProject() {
+        const container = document.getElementById('projects-container');
+        const count = parseInt(document.getElementById('proj_count').value);
+        const newItem = `
+            <div class="dynamic-item">
+                <div class="item-header">
+                    <strong>Project ${count + 1}</strong>
+                    <button type="button" class="btn btn-remove" onclick="removeProject(this)">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label>Project Name</label>
+                    <input type="text" class="form-control" name="proj_name_${count}" value="">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea class="form-control" name="proj_desc_${count}"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Link</label>
+                    <input type="text" class="form-control" name="proj_link_${count}" value="">
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', newItem);
+        document.getElementById('proj_count').value = count + 1;
+    }
+
+    function removeProject(button) {
+        button.closest('.dynamic-item').remove();
+    }
+</script>
+{%- endblock scripts %}
+
+{% endblock body %}

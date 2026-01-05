@@ -1,0 +1,19 @@
+# Resume Builder - Dependencies
+# Python 3.8+ required
+
+# Core Framework
+Flask>=2.3.0
+Flask-Bootstrap>=3.3.7.1
+Werkzeug>=2.3.0
+
+# Template Engine
+Jinja2>=3.1.0
+MarkupSafe>=2.1.0
+
+# Utilities
+click>=8.1.0
+itsdangerous>=2.1.0
+dominate>=2.8.0
+
+# Development (optional)
+python-dotenv>=1.0.0
